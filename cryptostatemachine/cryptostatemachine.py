@@ -12,7 +12,6 @@ import logging
 
 import networkx as nx
 import hashlib as hl
-import
 
 from cryptostatemachine import __version__
 
@@ -27,13 +26,18 @@ class StateMachine:
     """
     State machine class definition
 
-    :param n: integer
-    :return: n-th Fibonacci number
+    :param:
+    :return:
     """
-    def __init__(self):
-        self.graph = nx.graph()
+    import networkx as nx
 
-    def graph_digest(self):
+    def __init__(self):
+        G = nx.Graph()
+        G.add_node("initial")
+        self.graph = G
+
+
+    def state_digest(self):
         g_gml = nx.generate_gml(self.graph)
         g_list = []
         for i in range(0,3):
@@ -42,3 +46,13 @@ class StateMachine:
         g_hash = hl.sha256(g_string)
         self.g_digest = g_hash.digest()
         return(self.g_digest)
+
+#    def __add_sender__(self, node):
+
+class SimpleFlow(StateMachine):
+    """ Class definition for simplest state machine of thing-lending with insurance"""
+    def __init__(self):
+        G = nx.Graph()
+        G.add_nodes_from(['initial', 'offered', 'accepted', 'insured', 'returned'])
+        G.add_edges_from([('initial', 'offered'), ('offered', 'accepted'),('offered', 'insured'), ('accepted', 'returned')])
+        self.graph = G
