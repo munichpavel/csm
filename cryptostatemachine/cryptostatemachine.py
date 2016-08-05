@@ -12,6 +12,8 @@ import logging
 
 import networkx as nx
 import hashlib as hl
+from datetime import datetime, timedelta # Get up to microseconds
+import bitcoin as bc
 
 from cryptostatemachine import __version__
 
@@ -32,10 +34,29 @@ class StateMachine:
     import networkx as nx
 
     def __init__(self):
+        # Time stamping
+        #t_hash = hl.sha256()
+        #t_hash.update(str(datetime.now())) #CHECK ON TIME ZONES!!!
+        t_hash = self.sm_hash(str(datetime.now())) #CHECK ON TIME ZONES!!!
+        self.time_stamp = t_hash.hexdigest()[0:64]
+        # Define initial graph structure based on state machine / work flow
+        self.graph = self.init_graph()
+
+    def init_graph(self):
         G = nx.Graph()
         G.add_node("initial")
-        self.graph = G
+        return(G)
 
+    def sm_hash(self, to_hash):
+        """
+        Define hash function of choice for class
+
+        :param: thing to hash
+        :return: hash of thing, with chosen hash method for experimenting
+        """
+        my_hash = hl.sha256(to_hash)
+        #my_hash = hl.sha1(to_hash)
+        return(my_hash)
 
     def state_digest(self):
         g_gml = nx.generate_gml(self.graph)
@@ -43,16 +64,21 @@ class StateMachine:
         for i in range(0,3):
             g_list.append(g_gml.next())
         g_string = '-'.join(g_list)
-        g_hash = hl.sha256(g_string)
+        #g_hash = hl.sha256(g_string)
+        g_hash = self.sm_hash(g_string)
         self.g_digest = g_hash.digest()
         return(self.g_digest)
 
-#    def __add_sender__(self, node):
+    def state_hash(self):
+        """Hash graph state and time stamp for unique instance identifier"""
 
-class SimpleFlow(StateMachine):
+class SimpleSM(StateMachine):
     """ Class definition for simplest state machine of thing-lending with insurance"""
-    def __init__(self):
+    #def __init__(self): # Moved back to base class, no overwriting needed
+
+    # Overwrite from base class
+    def init_graph(self):
         G = nx.Graph()
         G.add_nodes_from(['initial', 'offered', 'accepted', 'insured', 'returned'])
         G.add_edges_from([('initial', 'offered'), ('offered', 'accepted'),('offered', 'insured'), ('accepted', 'returned')])
-        self.graph = G
+        return(G)
