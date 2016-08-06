@@ -127,7 +127,6 @@ class StateMachine:
         self.set_graph_digest()
 
         # Calculate new whole hash
-#       self.graph[node_name]['statehashdigest'] = self.state_hash_digest()
         self.graph[node_name]['statehashdigest'] = self.set_whole_digest()
 
         # Update transaction data
@@ -146,15 +145,10 @@ class StateMachine:
         if len(prev_node) == 1:
             pass
             self.trans_data = TransData(self.whole_digest, self.graph[prev_node[0]]['statehashdigest'])
-            #self.trans_data = TransData('hey', 'ho')
         else: raise ValueError('Non-unique previous nodes')
-        # assign current state hash
-        #self.trans_data.meta_data.hash = self.whole_hash
-        #return prev_node
 
 class SimpleSM(StateMachine):
     """ Class definition for simplest state machine of thing-lending with insurance"""
-    #def __init__(self): # Moved back to base class, no overwriting needed
 
     # Overwrite from base class
     def init_graph(self):
