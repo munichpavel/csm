@@ -50,17 +50,16 @@ class StateMachine:
     import networkx as nx
 
     def __init__(self):
+
         # Time stamping
-        #t_hash = hl.sha256()
-        #t_hash.update(str(datetime.now())) #CHECK ON TIME ZONES!!!
         self.time_stamp = self.hash_method(str(datetime.now())) #CHECK ON TIME ZONES!!!
-        #self.time_stamp = t_hash.hexdigest()
+
         # Define initial graph structure based on state machine / work flow
         self.graph = self.init_graph()
         self.trans_data = TransData()
 
     def init_graph(self):
-        G = nx.Graph()
+        G = nx.DiGraph()
         G.add_node("initial")
         return(G)
 
@@ -110,7 +109,7 @@ class SimpleSM(StateMachine):
 
     # Overwrite from base class
     def init_graph(self):
-        G = nx.Graph()
+        G = nx.DiGraph()
         G.add_nodes_from(['initial', 'offered', 'interested', 'insured', 'transferred', 'returned'])
         G.add_edges_from([('initial', 'offered'),
                           ('offered', 'interested'),
