@@ -111,6 +111,11 @@ class SimpleSM(StateMachine):
     # Overwrite from base class
     def init_graph(self):
         G = nx.Graph()
-        G.add_nodes_from(['initial', 'offered', 'accepted', 'insured', 'returned'])
-        G.add_edges_from([('initial', 'offered'), ('offered', 'accepted'),('offered', 'insured'), ('accepted', 'returned')])
+        G.add_nodes_from(['initial', 'offered', 'interested', 'insured', 'transferred', 'returned'])
+        G.add_edges_from([('initial', 'offered'),
+                          ('offered', 'interested'),
+                          ('offered', 'insured'),
+                          ('interested', 'transferred'),
+                          ('transferred', 'returned')
+                          ])
         return(G)
