@@ -57,29 +57,12 @@ class StateMachine:
 
         # Define initial graph structure based on state machine / work flow
         self.graph = self.init_graph()
-        self.trans_data = TransData(-1, -1) # Initialize???
+        self.set_graph_digest()
+        self.graph['initial']['statehashdigest'] = self.set_whole_digest()
+        self.trans_data = TransData(self.whole_digest, -1) # Initialize???
 
-    def get_graph_dict(self):
+    def get_graph_str(self):
         return str(nx.to_dict_of_dicts(self.graph))
-
-    # def get_gml_str(self):
-    #     """
-    #     Returns concatented string encoding gml of graph
-    #     :param gml:
-    #     :return:
-    #     """
-    #     g_gml = nx.generate_gml(self.graph)
-    #
-    #     g_list = []
-    #     try:
-    #         while True:
-    #             g_el = g_gml.next()
-    #             g_list.append(g_el)
-    #     except StopIteration:
-    #         pass
-    #
-    #     g_string = '-'.join(g_list)
-    #     return g_string
 
     def init_graph(self):
         G = nx.DiGraph()
@@ -97,43 +80,35 @@ class StateMachine:
         #my_hash = hl.sha1(to_hash)
         return(my_hash)
 
-    def state_hash_digest(self):
+    def set_graph_digest(self):
         """
         Hashes graph structure with ornamentation
         :return:
         """
         g_gml = nx.generate_gml(self.graph)
         #g_string = self.get_gml_str()
-        g_string = self.get_graph_dict()
+        g_string = self.get_graph_str()
         #g_string = 'twas brillig'
         self.g_string = g_string
 
         g_hash = self.hash_method(g_string)
-        self.g_hash = g_hash
-        self.g_digest = g_hash.digest()
+        self.g_hash = g_hash                # Move these onto nodes attributes?
+        self.g_digest = g_hash.digest()     # Move these node attributes?
         return g_hash.digest()
 
-    # def state_digest(self):
-    #     """
-    #     Returns digest of hashed
-    #     :return:
-    #     """
-    #     g_hash = self.g_hash
-    #
-    #     return(g_hash.digest())
 
-    def set_whole_hash(self):
-        """Hash graph state and time stamp for unique instance identifier"""
-        #whole_hash = self.hash_method(self.time_stamp)
-        # whole_hash = whole_hash.update(self.g_digest)
+    def set_whole_digest(self):
+        """
+        Hash graph state and time stamp for unique instance identifier
+        Only called from within update_node
+
+        """
+
         whole_hash = self.hash_method(self.time_stamp + self.g_digest) # TODO: Is this a good idea?
         #whole_hash_digest = whole_hash.digest()
         self.whole_hash = whole_hash
         self.whole_digest = whole_hash.digest()
-        #return(whole_hash_digest)
-
-    # def whole_digest(self):
-    #     return(self.whole_hash.digest())
+        return(self.whole_digest)
 
     def update_node(self, node_name, sent_from, sent_to):
         """
@@ -148,16 +123,15 @@ class StateMachine:
         self.graph[node_name]['from'] = sent_from
         self.graph[node_name]['to'] = sent_to
 
-        # Calculate new state hash
-        self.graph[node_name]['statehashdigest'] = self.state_hash_digest()
-        #self.graph[node_name]['statehashdigest'] = 'frabjous'
+        # Update graph hash
+        self.set_graph_digest()
 
-    # Calculate new whole hash (graph plus time stamp)
-        #self.whole_hash()
-        #self.whole_digest()
+        # Calculate new whole hash
+#       self.graph[node_name]['statehashdigest'] = self.state_hash_digest()
+        self.graph[node_name]['statehashdigest'] = self.set_whole_digest()
 
         # Update transaction data
-        #self.set_trans_data(node_name)
+        self.set_trans_data(node_name)
 
     def set_trans_data(self, node_name):
         """
@@ -170,12 +144,13 @@ class StateMachine:
         prev_node = self.graph.predecessors(node_name)
         # Ensure that single previous node, otherwise multiple previous hashes (accommodate this too???)
         if len(prev_node) == 1:
-            self.trans_data = TransData(prev_node.meta_data.hash)
+            pass
+            self.trans_data = TransData(self.whole_digest, self.graph[prev_node[0]]['statehashdigest'])
+            #self.trans_data = TransData('hey', 'ho')
         else: raise ValueError('Non-unique previous nodes')
-
         # assign current state hash
-        self.trans_data.meta_data.hash = self.whole_hash
-
+        #self.trans_data.meta_data.hash = self.whole_hash
+        #return prev_node
 
 class SimpleSM(StateMachine):
     """ Class definition for simplest state machine of thing-lending with insurance"""
