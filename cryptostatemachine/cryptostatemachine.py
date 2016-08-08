@@ -16,6 +16,9 @@ from datetime import datetime, timedelta # Get up to microseconds
 import bitcoin as bc
 from collections import namedtuple as nt
 
+import json
+
+
 from cryptostatemachine import __version__
 
 __author__ = "rastapavel"
@@ -27,6 +30,7 @@ _logger = logging.getLogger(__name__)
 class TransData():
     """
     Basic transaction data as in Bitcoin, initialized to nonsense
+    TODO: Check against Segregated Witness BIP 141
     """
     def __init__(self, own_hash, prev_hash):
         self.meta_data = {'hash': own_hash,   # As in Bitcoin
@@ -41,6 +45,16 @@ class TransData():
         self.out_data = {'value': -1, # Dummies for now
                     'scrip_pub_key': -1}
 
+    def export_as_dict(self):
+        """
+
+        :return: TransData as dictionary of dictionaries
+        """
+        self.trans_dict = {"meta_data": self.meta_data,
+                      "in_data": self.in_data,
+                      "out_data": self.out_data}
+        return(self.trans_dict)
+
 
 class StateMachine:
     """
@@ -53,7 +67,7 @@ class StateMachine:
 
     def __init__(self):
         # Time stamping
-        self.time_stamp = self.hash_method(str(datetime.now())).digest() #CHECK ON TIME ZONES!!!
+        self.time_stamp = self.hash_method(str(datetime.now())).hexdigest() #CHECK ON TIME ZONES!!!
 
         # Define initial graph structure based on state machine / work flow
         self.graph = self.init_graph()
@@ -93,8 +107,8 @@ class StateMachine:
 
         g_hash = self.hash_method(g_string)
         self.g_hash = g_hash                # Move these onto nodes attributes?
-        self.g_digest = g_hash.digest()     # Move these node attributes?
-        return g_hash.digest()
+        self.g_digest = g_hash.hexdigest()     # Move these node attributes?
+        return g_hash.hexdigest()
 
 
     def set_whole_digest(self):
@@ -105,9 +119,9 @@ class StateMachine:
         """
 
         whole_hash = self.hash_method(self.time_stamp + self.g_digest) # TODO: Is this a good idea?
-        #whole_hash_digest = whole_hash.digest()
+        #whole_hash_digest = whole_hash.hexdigest()
         self.whole_hash = whole_hash
-        self.whole_digest = whole_hash.digest()
+        self.whole_digest = whole_hash.hexdigest()
         return(self.whole_digest)
 
     def update_node(self, node_name, sent_from, sent_to):
@@ -146,6 +160,15 @@ class StateMachine:
             pass
             self.trans_data = TransData(self.whole_digest, self.graph[prev_node[0]]['statehashdigest'])
         else: raise ValueError('Non-unique previous nodes')
+
+    def write_trans_data(self, file):
+        """
+
+        :param file:
+        :return:
+        """
+        with open(file, 'w') as outfile:
+            json.dump(self.trans_data.export_as_dict(), outfile)
 
 class SimpleSM(StateMachine):
     """ Class definition for simplest state machine of thing-lending with insurance"""
