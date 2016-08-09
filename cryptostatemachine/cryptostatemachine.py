@@ -125,7 +125,7 @@ class StateMachine:
         self.whole_digest = whole_hash.hexdigest()
         return(self.whole_digest)
 
-    def update_node(self, node_name, sent_from, sent_toby, signature = -1):
+    def update_node(self, node_name, sender, signature = -1):
         """
         Encode next step in state machine by updating node decorations
         :param node_name:
@@ -135,8 +135,7 @@ class StateMachine:
         """
 
         # Update graph
-        self.graph[node_name]['from'] = sent_from
-        self.graph[node_name]['toby'] = sent_toby
+        self.graph[node_name]['sender'] = sender
         self.graph[node_name]['signature'] = signature
 
         # Update graph hash
