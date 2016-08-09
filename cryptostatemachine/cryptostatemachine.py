@@ -45,7 +45,7 @@ class TransData():
         self.out_data = {'value': -1, # Dummies for now
                     'scrip_pub_key': -1}
 
-    def export_as_dict(self):
+    def get_as_dict(self):
         """
 
         :return: TransData as dictionary of dictionaries
@@ -65,13 +65,14 @@ class StateMachine:
     """
     import networkx as nx
 
-    def __init__(self):
+    def __init__(self, pub_key):
         # Time stamping
         self.time_stamp = self.hash_method(str(datetime.now())).hexdigest() #CHECK ON TIME ZONES!!!
 
         # Define initial graph structure based on state machine / work flow
         self.graph = self.init_graph()
         self.set_graph_digest()
+        self.graph['initial']['toby'] = pub_key
         self.graph['initial']['statehashdigest'] = self.set_whole_digest()
         self.trans_data = TransData(self.whole_digest, -1) # Initialize???
 
@@ -124,7 +125,7 @@ class StateMachine:
         self.whole_digest = whole_hash.hexdigest()
         return(self.whole_digest)
 
-    def update_node(self, node_name, sent_from, sent_to):
+    def update_node(self, node_name, sent_from, sent_toby, signature = -1):
         """
         Encode next step in state machine by updating node decorations
         :param node_name:
@@ -135,7 +136,8 @@ class StateMachine:
 
         # Update graph
         self.graph[node_name]['from'] = sent_from
-        self.graph[node_name]['to'] = sent_to
+        self.graph[node_name]['toby'] = sent_toby
+        self.graph[node_name]['signature'] = signature
 
         # Update graph hash
         self.set_graph_digest()
@@ -161,14 +163,15 @@ class StateMachine:
             self.trans_data = TransData(self.whole_digest, self.graph[prev_node[0]]['statehashdigest'])
         else: raise ValueError('Non-unique previous nodes')
 
-    def write_trans_data(self, file):
+    def export_trans_data(self, file):
         """
 
         :param file:
         :return:
         """
-        with open(file, 'w') as outfile:
-            json.dump(self.trans_data.export_as_dict(), outfile)
+        with open(file, 'a') as outfile:
+            json.dump(self.trans_data.get_as_dict(), outfile, indent = 2)
+            outfile.write('\n')
 
 class SimpleSM(StateMachine):
     """ Class definition for simplest state machine of thing-lending with insurance"""
