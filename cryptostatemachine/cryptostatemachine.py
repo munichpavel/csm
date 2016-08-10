@@ -65,14 +65,15 @@ class StateMachine:
     """
     import networkx as nx
 
-    def __init__(self, pub_key):
+    def __init__(self, pub_key, signature):
         # Time stamping
         self.time_stamp = self.hash_method(str(datetime.now())).hexdigest() #CHECK ON TIME ZONES!!!
 
         # Define initial graph structure based on state machine / work flow
         self.graph = self.init_graph()
         self.set_graph_digest()
-        self.graph['initial']['toby'] = pub_key
+        self.graph['initial']['sender'] = pub_key
+        self.graph['initial']['signature'] = signature
         self.graph['initial']['statehashdigest'] = self.set_whole_digest()
         self.trans_data = TransData(self.whole_digest, -1) # Initialize???
 
